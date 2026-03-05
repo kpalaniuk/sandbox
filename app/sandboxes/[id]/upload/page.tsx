@@ -1,13 +1,13 @@
 "use client";
 
-import { useState, use } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Upload, Loader2, ImageIcon } from "lucide-react";
 import Link from "next/link";
 import { SandboxNav } from "../SandboxNav";
 
-export default function UploadPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = use(params);
+export default function UploadPage({ params }: { params: { id: string } }) {
+  const { id } = params;
   const router = useRouter();
   const [uploading, setUploading] = useState(false);
   const [caption, setCaption] = useState("");

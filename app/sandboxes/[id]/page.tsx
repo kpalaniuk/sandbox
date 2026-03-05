@@ -1,16 +1,15 @@
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { supabaseAdmin } from "@/lib/supabase";
-import { Sandbox, MediaItem, Message, Expense } from "@/lib/types";
 import Link from "next/link";
 import { ArrowLeft, Calendar, Users } from "lucide-react";
 import { format } from "date-fns";
 import { SandboxNav } from "./SandboxNav";
 import { Timeline } from "./Timeline";
 
-export default async function SandboxPage({ params }: { params: Promise<{ id: string }> }) {
-  const { userId } = await auth();
-  const { id } = await params;
+export default async function SandboxPage({ params }: { params: { id: string } }) {
+  const { userId } = auth();
+  const { id } = params;
   
   if (!userId) {
     redirect("/sign-in");

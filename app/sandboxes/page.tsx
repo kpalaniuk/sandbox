@@ -7,7 +7,7 @@ import { Plus, Calendar, Users, MapPin } from "lucide-react";
 import { format } from "date-fns";
 
 export default async function SandboxesPage() {
-  const { userId } = await auth();
+  const { userId } = auth();
   
   if (!userId) {
     redirect("/sign-in");

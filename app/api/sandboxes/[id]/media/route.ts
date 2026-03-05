@@ -4,11 +4,11 @@ import { supabaseAdmin } from "@/lib/supabase";
 
 export async function POST(
   request: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
   try {
-    const { userId } = await auth();
-    const { id } = await params;
+    const { userId } = auth();
+    const { id } = params;
     
     if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -44,11 +44,11 @@ export async function POST(
 
 export async function GET(
   request: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
   try {
-    const { userId } = await auth();
-    const { id } = await params;
+    const { userId } = auth();
+    const { id } = params;
     
     if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
