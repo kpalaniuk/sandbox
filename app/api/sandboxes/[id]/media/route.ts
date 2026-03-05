@@ -1,27 +1,20 @@
-import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
+import { createSupabaseServerClient } from "@/lib/supabase-server";
 import { supabaseAdmin } from "@/lib/supabase";
 
-export async function POST(
-  request: Request,
-  { params }: { params: { id: string } }
-) {
+export async function POST(request: Request, { params }: { params: { id: string } }) {
   try {
-    const { userId } = auth();
-    const { id } = params;
-    
-    if (!userId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const supabase = createSupabaseServerClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-    const body = await request.json();
-    const { type, url, caption } = body;
+    const { type, url, caption } = await request.json();
 
-    const { data: mediaItem, error } = await supabaseAdmin
+    const { data, error } = await supabaseAdmin
       .from("media_items")
       .insert({
-        sandbox_id: id,
-        owner_id: userId,
+        sandbox_id: params.id,
+        owner_id: user.id,
         type,
         url,
         caption: caption || null,
@@ -30,43 +23,28 @@ export async function POST(
       .select()
       .single();
 
-    if (error) {
-      console.error("Media creation error:", error);
-      return NextResponse.json({ error: "Failed to create media item" }, { status: 500 });
-    }
-
-    return NextResponse.json(mediaItem);
-  } catch (error) {
-    console.error("API error:", error);
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json(data);
+  } catch (e) {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
 
-export async function GET(
-  request: Request,
-  { params }: { params: { id: string } }
-) {
+export async function GET(request: Request, { params }: { params: { id: string } }) {
   try {
-    const { userId } = auth();
-    const { id } = params;
-    
-    if (!userId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const supabase = createSupabaseServerClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-    const { data: mediaItems, error } = await supabaseAdmin
+    const { data, error } = await supabaseAdmin
       .from("media_items")
       .select("*")
-      .eq("sandbox_id", id)
+      .eq("sandbox_id", params.id)
       .order("timestamp", { ascending: false });
 
-    if (error) {
-      return NextResponse.json({ error: "Failed to fetch media" }, { status: 500 });
-    }
-
-    return NextResponse.json(mediaItems || []);
-  } catch (error) {
-    console.error("API error:", error);
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json(data || []);
+  } catch (e) {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

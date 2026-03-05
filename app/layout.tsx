@@ -1,5 +1,4 @@
 import type { Metadata, Viewport } from "next";
-import { ClerkProvider } from "@clerk/nextjs";
 import { Space_Grotesk, Inter } from "next/font/google";
 import "./globals.css";
 
@@ -36,31 +35,14 @@ export const metadata: Metadata = {
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
-  // Clerk publishable key — must be set in env
-  const clerkKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
-  
-  if (!clerkKey) {
-    return (
-      <html lang="en" className={`${spaceGrotesk.variable} ${inter.variable}`}>
-        <body className="font-sans antialiased bg-sand text-midnight min-h-screen">
-          <div className="flex items-center justify-center min-h-screen">
-            <p className="text-red-500">Missing NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY</p>
-          </div>
-        </body>
-      </html>
-    );
-  }
-
+}) {
   return (
-    <ClerkProvider publishableKey={clerkKey}>
-      <html lang="en" className={`${spaceGrotesk.variable} ${inter.variable}`}>
-        <body className="font-sans antialiased bg-sand text-midnight min-h-screen">
-          {children}
-        </body>
-      </html>
-    </ClerkProvider>
+    <html lang="en" className={`${spaceGrotesk.variable} ${inter.variable}`}>
+      <body className="font-sans antialiased bg-sand text-midnight min-h-screen">
+        {children}
+      </body>
+    </html>
   );
 }
