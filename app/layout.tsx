@@ -25,7 +25,7 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   title: "Sandbox - Shared Trip Container",
-  description: "Automatically aggregate and organize multimedia, messages, and mementos from shared experiences",
+  description: "Relive the trip without the cleanup",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
@@ -39,8 +39,23 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // Clerk publishable key — must be set in env
+  const clerkKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
+  
+  if (!clerkKey) {
+    return (
+      <html lang="en" className={`${spaceGrotesk.variable} ${inter.variable}`}>
+        <body className="font-sans antialiased bg-sand text-midnight min-h-screen">
+          <div className="flex items-center justify-center min-h-screen">
+            <p className="text-red-500">Missing NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY</p>
+          </div>
+        </body>
+      </html>
+    );
+  }
+
   return (
-    <ClerkProvider>
+    <ClerkProvider publishableKey={clerkKey}>
       <html lang="en" className={`${spaceGrotesk.variable} ${inter.variable}`}>
         <body className="font-sans antialiased bg-sand text-midnight min-h-screen">
           {children}
