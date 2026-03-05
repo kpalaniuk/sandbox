@@ -4,10 +4,11 @@ import { supabaseAdmin } from "@/lib/supabase";
 
 export async function POST(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { userId } = await auth();
+    const { id } = await params;
     
     if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -16,11 +17,10 @@ export async function POST(
     const body = await request.json();
     const { type, url, caption } = body;
 
-    // Create media item
     const { data: mediaItem, error } = await supabaseAdmin
       .from("media_items")
       .insert({
-        sandbox_id: params.id,
+        sandbox_id: id,
         owner_id: userId,
         type,
         url,
@@ -44,10 +44,11 @@ export async function POST(
 
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { userId } = await auth();
+    const { id } = await params;
     
     if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -56,7 +57,7 @@ export async function GET(
     const { data: mediaItems, error } = await supabaseAdmin
       .from("media_items")
       .select("*")
-      .eq("sandbox_id", params.id)
+      .eq("sandbox_id", id)
       .order("timestamp", { ascending: false });
 
     if (error) {

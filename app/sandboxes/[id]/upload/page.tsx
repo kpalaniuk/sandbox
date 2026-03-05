@@ -1,12 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, use } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Upload, Loader2, ImageIcon } from "lucide-react";
 import Link from "next/link";
 import { SandboxNav } from "../SandboxNav";
 
-export default function UploadPage({ params }: { params: { id: string } }) {
+export default function UploadPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params);
   const router = useRouter();
   const [uploading, setUploading] = useState(false);
   const [caption, setCaption] = useState("");
@@ -31,7 +32,7 @@ export default function UploadPage({ params }: { params: { id: string } }) {
       // For MVP: using placeholder - in production would upload to Supabase Storage
       const mockUrl = preview || "";
       
-      const res = await fetch(`/api/sandboxes/${params.id}/media`, {
+      const res = await fetch(`/api/sandboxes/${id}/media`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -43,7 +44,7 @@ export default function UploadPage({ params }: { params: { id: string } }) {
 
       if (!res.ok) throw new Error("Upload failed");
 
-      router.push(`/sandboxes/${params.id}`);
+      router.push(`/sandboxes/${id}`);
     } catch (error) {
       console.error(error);
       alert("Upload failed");
@@ -56,7 +57,7 @@ export default function UploadPage({ params }: { params: { id: string } }) {
       <header className="safe-top px-4 py-6 border-b border-midnight/10">
         <div className="max-w-2xl mx-auto flex items-center gap-4">
           <Link
-            href={`/sandboxes/${params.id}`}
+            href={`/sandboxes/${id}`}
             className="tap-target text-midnight/60 hover:text-midnight"
           >
             <ArrowLeft className="w-6 h-6" />
@@ -157,7 +158,7 @@ export default function UploadPage({ params }: { params: { id: string } }) {
         </div>
       </main>
 
-      <SandboxNav sandboxId={params.id} />
+      <SandboxNav sandboxId={id} />
     </div>
   );
 }

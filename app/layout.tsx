@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { ClerkProvider } from "@clerk/nextjs";
 import { Space_Grotesk, Inter } from "next/font/google";
 import "./globals.css";
@@ -15,11 +15,17 @@ const inter = Inter({
   display: "swap",
 });
 
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  themeColor: "#0a0a0a",
+};
+
 export const metadata: Metadata = {
   title: "Sandbox - Shared Trip Container",
   description: "Automatically aggregate and organize multimedia, messages, and mementos from shared experiences",
-  viewport: "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no",
-  themeColor: "#0a0a0a",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,

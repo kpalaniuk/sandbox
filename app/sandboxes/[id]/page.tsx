@@ -3,13 +3,14 @@ import { redirect } from "next/navigation";
 import { supabaseAdmin } from "@/lib/supabase";
 import { Sandbox, MediaItem, Message, Expense } from "@/lib/types";
 import Link from "next/link";
-import { ArrowLeft, Upload, MessageCircle, DollarSign, Calendar, Users } from "lucide-react";
-import { format, formatDistance } from "date-fns";
+import { ArrowLeft, Calendar, Users } from "lucide-react";
+import { format } from "date-fns";
 import { SandboxNav } from "./SandboxNav";
 import { Timeline } from "./Timeline";
 
-export default async function SandboxPage({ params }: { params: { id: string } }) {
+export default async function SandboxPage({ params }: { params: Promise<{ id: string }> }) {
   const { userId } = await auth();
+  const { id } = await params;
   
   if (!userId) {
     redirect("/sign-in");
@@ -19,7 +20,7 @@ export default async function SandboxPage({ params }: { params: { id: string } }
   const { data: sandbox, error: sandboxError } = await supabaseAdmin
     .from("sandboxes")
     .select("*")
-    .eq("id", params.id)
+    .eq("id", id)
     .single();
 
   if (sandboxError || !sandbox) {
@@ -30,7 +31,7 @@ export default async function SandboxPage({ params }: { params: { id: string } }
   const { data: participant } = await supabaseAdmin
     .from("participants")
     .select("*")
-    .eq("sandbox_id", params.id)
+    .eq("sandbox_id", id)
     .eq("user_id", userId)
     .single();
 
@@ -42,20 +43,20 @@ export default async function SandboxPage({ params }: { params: { id: string } }
   const { data: mediaItems } = await supabaseAdmin
     .from("media_items")
     .select("*")
-    .eq("sandbox_id", params.id)
+    .eq("sandbox_id", id)
     .order("timestamp", { ascending: false });
 
   // Fetch participants
   const { data: participants } = await supabaseAdmin
     .from("participants")
     .select("*")
-    .eq("sandbox_id", params.id);
+    .eq("sandbox_id", id);
 
   // Fetch recent messages
   const { data: messages } = await supabaseAdmin
     .from("messages")
     .select("*")
-    .eq("sandbox_id", params.id)
+    .eq("sandbox_id", id)
     .order("created_at", { ascending: false })
     .limit(50);
 
@@ -63,7 +64,7 @@ export default async function SandboxPage({ params }: { params: { id: string } }
   const { data: expenses } = await supabaseAdmin
     .from("expenses")
     .select("*")
-    .eq("sandbox_id", params.id)
+    .eq("sandbox_id", id)
     .order("created_at", { ascending: false });
 
   return (
@@ -111,7 +112,7 @@ export default async function SandboxPage({ params }: { params: { id: string } }
       {/* Main content */}
       <main className="max-w-4xl mx-auto px-4 py-6">
         <Timeline
-          sandboxId={params.id}
+          sandboxId={id}
           mediaItems={mediaItems || []}
           messages={messages || []}
           expenses={expenses || []}
@@ -119,7 +120,7 @@ export default async function SandboxPage({ params }: { params: { id: string } }
       </main>
 
       {/* Bottom navigation */}
-      <SandboxNav sandboxId={params.id} />
+      <SandboxNav sandboxId={id} />
     </div>
   );
 }

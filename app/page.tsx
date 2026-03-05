@@ -1,24 +1,27 @@
-import { SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/nextjs";
+import { auth } from "@clerk/nextjs/server";
+import { SignInButton, UserButton } from "@clerk/nextjs";
 import { ArrowRight, Camera, Users, Calendar, DollarSign } from "lucide-react";
 import Link from "next/link";
 
-export default function Home() {
+export default async function Home() {
+  const { userId } = await auth();
+  const isSignedIn = !!userId;
+
   return (
     <div className="min-h-screen flex flex-col">
       {/* Header */}
       <header className="safe-top px-4 py-4 flex items-center justify-between">
         <h1 className="text-2xl font-display font-bold">Sandbox</h1>
         <div className="flex items-center gap-3">
-          <SignedIn>
+          {isSignedIn ? (
             <UserButton />
-          </SignedIn>
-          <SignedOut>
+          ) : (
             <SignInButton mode="modal">
               <button className="px-4 py-2 bg-ocean text-cream rounded-lg font-medium tap-target">
                 Sign In
               </button>
             </SignInButton>
-          </SignedOut>
+          )}
         </div>
       </header>
 
@@ -65,29 +68,30 @@ export default function Home() {
 
           {/* CTA */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-            <SignedIn>
-              <Link 
-                href="/sandboxes/new" 
-                className="px-8 py-4 bg-midnight text-cream rounded-xl font-semibold flex items-center gap-2 hover:bg-ocean transition-colors tap-target"
-              >
-                Create Sandbox
-                <ArrowRight className="w-5 h-5" />
-              </Link>
-              <Link 
-                href="/sandboxes" 
-                className="px-8 py-4 bg-cream text-midnight border-2 border-midnight/20 rounded-xl font-semibold hover:border-ocean transition-colors tap-target"
-              >
-                View My Sandboxes
-              </Link>
-            </SignedIn>
-            <SignedOut>
+            {isSignedIn ? (
+              <>
+                <Link 
+                  href="/sandboxes/new" 
+                  className="px-8 py-4 bg-midnight text-cream rounded-xl font-semibold flex items-center gap-2 hover:bg-ocean transition-colors tap-target"
+                >
+                  Create Sandbox
+                  <ArrowRight className="w-5 h-5" />
+                </Link>
+                <Link 
+                  href="/sandboxes" 
+                  className="px-8 py-4 bg-cream text-midnight border-2 border-midnight/20 rounded-xl font-semibold hover:border-ocean transition-colors tap-target"
+                >
+                  View My Sandboxes
+                </Link>
+              </>
+            ) : (
               <SignInButton mode="modal">
                 <button className="px-8 py-4 bg-midnight text-cream rounded-xl font-semibold flex items-center gap-2 hover:bg-ocean transition-colors tap-target">
                   Get Started
                   <ArrowRight className="w-5 h-5" />
                 </button>
               </SignInButton>
-            </SignedOut>
+            )}
           </div>
 
           <p className="text-sm text-midnight/40 pt-4">
