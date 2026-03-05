@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
 import { SandboxNav } from "../SandboxNav";
 import { Plus, DollarSign, Check, Clock, Loader2 } from "lucide-react";
 import { format } from "date-fns";
@@ -13,7 +12,6 @@ interface Expense {
   payer_id: string;
   status: string;
   created_at: string;
-  splits: { user_id: string; amount: number }[];
 }
 
 export default function ExpensesPage({ params }: { params: { id: string } }) {
@@ -24,41 +22,41 @@ export default function ExpensesPage({ params }: { params: { id: string } }) {
   const [saving, setSaving] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [form, setForm] = useState({ description: "", amount: "" });
-  const supabase = createSupabaseBrowserClient();
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => setCurrentUserId(data.user?.id || null));
+    // Get current user from session
+    import("@/lib/supabase-browser").then(({ createSupabaseBrowserClient }) => {
+      createSupabaseBrowserClient().auth.getUser().then(({ data }) =>
+        setCurrentUserId(data.user?.id || null)
+      );
+    });
     loadExpenses();
   }, [id]);
 
   async function loadExpenses() {
-    const { data } = await supabase
-      .from("expenses")
-      .select("*")
-      .eq("sandbox_id", id)
-      .order("created_at", { ascending: false });
-    setExpenses(data || []);
+    setLoading(true);
+    const res = await fetch(`/api/sandboxes/${id}/expenses`);
+    if (res.ok) setExpenses(await res.json());
     setLoading(false);
   }
 
   async function addExpense(e: React.FormEvent) {
     e.preventDefault();
-    if (!currentUserId) return;
     setSaving(true);
-
-    await supabase.from("expenses").insert({
-      sandbox_id: id,
-      payer_id: currentUserId,
-      description: form.description,
-      amount: parseFloat(form.amount),
-      status: "pending",
-      splits: [],
+    const res = await fetch(`/api/sandboxes/${id}/expenses`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ description: form.description, amount: form.amount }),
     });
-
-    setForm({ description: "", amount: "" });
-    setShowForm(false);
+    if (res.ok) {
+      setForm({ description: "", amount: "" });
+      setShowForm(false);
+      loadExpenses();
+    } else {
+      const d = await res.json();
+      alert(d.error || "Failed to add expense");
+    }
     setSaving(false);
-    loadExpenses();
   }
 
   const total = expenses.reduce((sum, e) => sum + (e.amount || 0), 0);
@@ -83,10 +81,9 @@ export default function ExpensesPage({ params }: { params: { id: string } }) {
       </header>
 
       <main className="max-w-2xl mx-auto px-4 py-4 space-y-4">
-        {/* Add form */}
         {showForm && (
           <form onSubmit={addExpense} className="bg-cream rounded-2xl p-4 space-y-3">
-            <h2 className="font-semibold">New Expense</h2>
+            <h2 className="font-semibold text-sm">New Expense</h2>
             <input
               value={form.description}
               onChange={(e) => setForm(f => ({ ...f, description: e.target.value }))}
@@ -98,9 +95,7 @@ export default function ExpensesPage({ params }: { params: { id: string } }) {
               <div className="relative flex-1">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-midnight/40">$</span>
                 <input
-                  type="number"
-                  step="0.01"
-                  min="0"
+                  type="number" step="0.01" min="0"
                   value={form.amount}
                   onChange={(e) => setForm(f => ({ ...f, amount: e.target.value }))}
                   placeholder="0.00"
@@ -109,8 +104,7 @@ export default function ExpensesPage({ params }: { params: { id: string } }) {
                 />
               </div>
               <button
-                type="submit"
-                disabled={saving}
+                type="submit" disabled={saving}
                 className="px-4 py-2.5 bg-ocean text-cream rounded-lg text-sm font-medium hover:bg-midnight transition-colors disabled:opacity-50 flex items-center gap-2"
               >
                 {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : "Save"}
@@ -119,9 +113,10 @@ export default function ExpensesPage({ params }: { params: { id: string } }) {
           </form>
         )}
 
-        {/* Expense list */}
         {loading ? (
-          <div className="flex justify-center py-12"><Loader2 className="w-6 h-6 animate-spin text-midnight/30" /></div>
+          <div className="flex justify-center py-12">
+            <Loader2 className="w-6 h-6 animate-spin text-midnight/30" />
+          </div>
         ) : expenses.length === 0 ? (
           <div className="text-center py-12 text-midnight/40">
             <DollarSign className="w-10 h-10 mx-auto mb-3 opacity-30" />
@@ -136,8 +131,7 @@ export default function ExpensesPage({ params }: { params: { id: string } }) {
               }`}>
                 {expense.status === "settled"
                   ? <Check className="w-5 h-5 text-green-600" />
-                  : <Clock className="w-5 h-5 text-sunset" />
-                }
+                  : <Clock className="w-5 h-5 text-sunset" />}
               </div>
               <div className="flex-1 min-w-0">
                 <p className="font-medium truncate">{expense.description}</p>
